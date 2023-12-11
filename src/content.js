@@ -67,6 +67,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     elements = {};
     chrome.storage.sync.clear();
     alert('Cleared');
+    //refresh page
+    window.location.reload();
   }
 });
 

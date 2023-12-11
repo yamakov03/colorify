@@ -81,7 +81,7 @@ function IndexPopup() {
       >
         Clear all
       </button>
-      <a id="clickable">◕‿‿◕</a>
+      <a id="clickable" className="cursor-pointer">◕‿‿◕</a>
       <Tooltip anchorSelect="#clickable" clickable>
         Hello! Add an element to get started.
       </Tooltip>
