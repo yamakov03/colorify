@@ -32,26 +32,61 @@ function changeTextColor(elem, color) {
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.command === 'start') {
     isSelecting = true;
+  } else if(request.command === 'highlightElem'){
+    const elem = document.querySelector(request.querySelector);
+    elem.style.boxShadow = 'inset 0 0 0 2px red';
+    elem.style.outline = '2px solid red';
+    setTimeout(() => {
+      elem.style.boxShadow = '';
+      elem.style.outline = '';
+    }, 1000);
   } else if (request.command === 'removeElement') {
-    document.querySelector(elements[request.id].querySelector).style.backgroundColor = elements[request.id].originalColor;
-    changeTextColor(document.querySelector(elements[request.id].querySelector), elements[request.id].originalTextColor);
+    const elem = document.querySelector(elements[request.id].querySelector)
+    elem.style.backgroundColor = elements[request.id].originalColor;
+    changeTextColor(elem, elements[request.id].originalTextColor);
     delete elements[request.id];
     chrome.storage.sync.set({ elements });
+  } else if(request.command === 'addByQuery'){
+    const id = Date.now().toString();
+    const elem = document.querySelector(request.querySelector);
+    elements[id] = {
+      id,
+      originalColor: elem.style.backgroundColor,
+      originalTextColor: elem.style.color,
+      color: '#000000',
+      textColor: '#fff',
+      querySelector: request.querySelector,
+      colorToggle: true,
+      textColorToggle: true 
+    };
+    chrome.storage.sync.set({ elements });
+    elem.style.backgroundColor = '#000000';
+    elem.style.color = '#fff';
+    elem.parentNode.style.overflow = 'hidden';
+  
   } else if (request.command === 'changeColor') {
     elements[request.id].color = request.color;
     chrome.storage.sync.set({ elements });
-    document.querySelector(elements[request.id].querySelector).style.backgroundColor = elements[request.id].color;
+    const elem = document.querySelector(elements[request.id].querySelector)
+    if (elements[request.id].colorToggle) {
+      elem.style.backgroundColor = elements[request.id].color;
+      elem.parentNode.style.overflow = 'hidden';
+    }
   } else if (request.command === 'changeTextColor') {
     elements[request.id].textColor = request.textColor;
     chrome.storage.sync.set({ elements });
     const elem = document.querySelector(elements[request.id].querySelector);
-    changeTextColor(elem, elements[request.id].textColor);
+    if (elements[request.id].textColorToggle) {
+      changeTextColor(elem, elements[request.id].textColor);
+    }
   } else if(request.command === 'changeColorToggle') {
     elements[request.id].colorToggle = request.colorToggle;
+    const elem = document.querySelector(elements[request.id].querySelector);
     if (elements[request.id].colorToggle) {
-      document.querySelector(elements[request.id].querySelector).style.backgroundColor = elements[request.id].color;
+      elem.style.backgroundColor = elements[request.id].color;
+      elem.parentNode.style.overflow = 'hidden';
     } else {
-      document.querySelector(elements[request.id].querySelector).style.backgroundColor = elements[request.id].originalColor;
+      elem.style.backgroundColor = elements[request.id].originalColor;
     }
     chrome.storage.sync.set({ elements });
   } else if (request.command === 'changeTextColorToggle') {
@@ -83,6 +118,7 @@ chrome.storage.sync.get('elements', function (data) {
         const elem = document.querySelector(querySelector);
         if (elements[id].colorToggle) {
           elem.style.backgroundColor = elements[id].color;
+          elem.parentNode.style.overflow = 'hidden';
         }
         if (elements[id].textColorToggle) {
           changeTextColor(elem, elements[id].textColor);
@@ -120,23 +156,27 @@ document.addEventListener('click', function (e) {
       textColorToggle: true 
     };
     chrome.storage.sync.set({ elements });
+    selectedElem.style.backgroundColor = '#000000';
+    selectedElem.style.color = '#fff';
+    selectedElem.parentNode.style.overflow = 'hidden';
     isSelecting = false;
   }
 });
 
-// Create a MutationObserver instance
 const observer = new MutationObserver((mutationsList, observer) => {
-  // if (!isEnabled) return;
   for (const id in elements) {
     const querySelector = elements[id].querySelector;
-    if (elements[id].colorToggle) {
-      document.querySelector(querySelector).style.backgroundColor = elements[id].color;
-    }
-    if (elements[id].textColorToggle){
-      document.querySelector(querySelector).style.color = elements[id].textColor; 
+    const elem = document.querySelector(querySelector);
+    if (elem) { // Check if the element exists
+      if (elements[id].colorToggle) {
+        elem.style.backgroundColor = elements[id].color;
+        elem.parentNode.style.overflow = 'hidden';
+      }
+      if (elements[id].textColorToggle){
+        changeTextColor(elem, elements[id].textColor);
+      }
     }
   }
 });
 
-// Start observing the document with the configured parameters
 observer.observe(document, { childList: true, subtree: true });
