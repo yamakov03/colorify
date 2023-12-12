@@ -3,3 +3,18 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.chevron {
+    display: inline-block;
+    z-index: 1;
+    width: 10px;
+    height: 10px;
+    border-top: 2px solid;
+    border-right: 2px solid;
+    transform: rotate(45deg);
+    transition: transform 0.3s ease;
+  }
+  
+  .chevron.rotate {
+    transform: rotate(135deg);
+  }

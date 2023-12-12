@@ -6,25 +6,39 @@ import Switch from 'react-switch';
 import "~style.css"
 import { Tooltip } from 'react-tooltip'
 import Modal from 'react-modal';
+import Select from 'react-select';
 
 function IndexPopup() {
   const [elements, setElements] = useState({});
-  const [modalIsOpen, setIsOpen] = useState(false);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
   const [queryInput, setQueryInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [isOpen, setIsOpen] = useState(() => {
+    const savedState = localStorage.getItem('isOpen');
+    return savedState ? JSON.parse(savedState) : {};
+  });
 
   function openModal() {
-    setIsOpen(true);
+    setModalIsOpen(true);
   }
 
   function closeModal() {
-    setIsOpen(false);
+    setModalIsOpen(false);
   }
+
+  const toggleOpen = (site) => {
+    setIsOpen(prevState => ({ ...prevState, [site]: !prevState[site] }));
+  };
 
   useEffect(() => {
     chrome.storage.sync.get('elements', function (data) {
       setElements(data.elements || {});
     })
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('isOpen', JSON.stringify(isOpen));
+  }, [isOpen]);
 
   const handleAddElem = () => {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -88,9 +102,50 @@ function IndexPopup() {
     });
   }
 
+  const unhighlightElem = (querySelector) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, { command: 'unhighlightElem', querySelector });
+    });
+  }
+
+  const clearSite = (site) => {
+    setElements(prevElems => {
+      const newElems = { ...prevElems };
+      Object.keys(newElems).forEach((key) => {
+        if (newElems[key].site === site) {
+          delete newElems[key];
+        }
+      });
+      return newElems;
+    });
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.sendMessage(tabs[0].id, { command: 'clearFromSite', site: site});
+    });
+  };
+
+  const groupedElements = Object.values(elements).reduce((groups, elem) => {
+    const key = elem.site;
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(elem);
+    return groups;
+  }, {});
+
+  const options = Object.keys(groupedElements).map(website => ({ value: website, label: website }));
+
+  const filteredElements = search
+    ? Object.keys(groupedElements)
+      .filter(website => website.toLowerCase().includes(search.toLowerCase()))
+      .reduce((result, website) => {
+        result[website] = groupedElements[website];
+        return result;
+      }, {})
+    : groupedElements;
+
   return (
-    <div className="w-[350px] h-[500px] overflow-y-auto bg-slate-900 text-white">
-      <div className="sticky top-0 bg-slate-900 drop-shadow-sm mx-4 pt-4 mb-2 border-b-[1px] border-white">
+    <div className="w-[370px] h-[500px] bg-slate-900 text-white">
+      <div className="sticky top-0 bg-slate-900 drop-shadow-sm mx-3 pt-4 mb-2 border-b-[1px] border-gray-500">
         <button
           onClick={handleAddElem}
           id="selectElem"
@@ -98,7 +153,7 @@ function IndexPopup() {
         >
           Select Elem
         </button>
-        <Tooltip anchorSelect="#selectElem" clickable>
+        <Tooltip anchorSelect="#selectElem" clickable className="z-50">
           Hover over and double click an element to select it
         </Tooltip>
         <button
@@ -108,7 +163,7 @@ function IndexPopup() {
         >
           Enter Elem
         </button>
-        <Tooltip anchorSelect="#enterElem" clickable>
+        <Tooltip anchorSelect="#enterElem" clickable className="z-50">
           Enter a selector string to select an element
         </Tooltip>
 
@@ -126,71 +181,117 @@ function IndexPopup() {
             onChange={(e) => setQueryInput(e.target.value)}
           />
           <button
-          onClick={() => {
-            addElemByQuery(queryInput);
-            closeModal();
-          }}
-          id="enterElem"
-          className=" bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded me-2"
-        >
-          Add
-        </button>
+            onClick={() => {
+              addElemByQuery(queryInput);
+              closeModal();
+            }}
+            id="enterElem"
+            className=" bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded me-2"
+          >
+            Add
+          </button>
         </Modal>
-
 
         <button
           onClick={clearAllElem}
-          className="mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded me-2"
+          className="mb-4 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded me-7"
         >
           Clear all
         </button>
         <a id="clickable" className="cursor-pointer">◕‿‿◕</a>
-        <Tooltip anchorSelect="#clickable" clickable>
+        <Tooltip anchorSelect="#clickable" clickable className="z-50">
           Hello! Add an element to get started.
         </Tooltip>
-        <div className="flex flex-row gap-4 ms-1">
 
-          <p >BG</p>
-          <p>Text</p>
+        <Select
+          className="mb-3 z-40"
+          placeholder="Search sites..."
+          isClearable
+          isSearchable
+          options={options}
+          onChange={(e) => e != null ? setSearch(e.value) : setSearch('')}
+          menuPortalTarget={document.body}
+          styles={{
+            menuPortal: base => ({ ...base, zIndex: 9999, color: '#fff' }),
+          }}
+          theme={(theme) => ({
+            ...theme,
+            colors: {
+              ...theme.colors,
+              primary25: '#3b82f6',
+              primary: '#3b82f6',
+              neutral0: '#1f2937',
+              neutral20: '#3b82f6',
+              neutral30: '#3b82f6',
+              neutral40: '#3b82f6',
+              neutral50: '#aaa',
+              neutral60: '#fff',
+              neutral70: '#fff',
+              neutral80: '#fff',
+              neutral90: '#fff',
+            },
+            //set z index to 50 so it shows up above the tooltip
+          })}
+        />
+
+        <div className="flex flex-row text-gray-500">
+          <p className="ms-2 me-3">BG</p>
+          <p className="me-[110px]">Text</p>
           <p>Query</p>
         </div>
       </div>
-      <div className="px-3">
-
-        {Object.values(elements).map((elem) => (
-          <>
-            <div key={elem.id} className="flex items-center p-1 hover:bg-slate-700 rounded-md " id={`elem-${elem.id}`} onMouseOver={() => highlightElem(elem.querySelector)}>
-              <div
-                className="w-6 h-6 mr-2  cursor-pointer rounded-full"
-                style={{ border: elem.colorToggle ? '4px solid #3b82f6' : '2px solid transparent', backgroundColor: elem.color }}
-                id={`color-elem-${elem.id}`}
-                onClick={() => handleColorToggle(elem.id)}
-              >
+      <div className="px-3 overflow-y-auto">
+        {Object.entries(filteredElements).map(([site, elems]) => (
+          <div className={`mb-2 bg-slate-800 ${!isOpen[site] && "hover:bg-slate-700"} rounded-md p-1`} key={site}>
+            <div className={`text-md p-1 flex justify-between items-center ms-1 cursor-pointer ${isOpen[site] && "mb-2"}`} onClick={() => toggleOpen(site)}>
+              <div className="flex flex-row items-center">
+                <span className={`chevron me-2 z-10 ${isOpen[site] ? 'rotate' : ''}`}></span>
+                <p>{site}</p>
               </div>
-              <div
-                className="w-6 h-6 mr-2  cursor-pointer rounded-full"
-                style={{ border: elem.textColorToggle ? '4px solid #3b82f6' : '2px solid transparent', backgroundColor: elem.textColor }}
-                id={`text-elem-${elem.id}`}
-                onClick={() => handleTextColorToggle(elem.id)}
-              >
-              </div>
-              <p className="flex-1 truncate ps-2 pe-3">{elem.querySelector}</p>
-              <Tooltip anchorSelect={`#color-elem-${elem.id}`} clickable>
-                <ChromePicker color={elem.color} onChangeComplete={(color) => handleColorChangeComplete(color, elem.id)} />
-              </Tooltip>
-              <Tooltip anchorSelect={`#text-elem-${elem.id}`} clickable>
-                <ChromePicker color={elem.textColor} onChangeComplete={(color) => handleTextColorChangeComplete(color, elem.id)} />
-              </Tooltip>
-              <button
-                onClick={() => handleRemoveElem(elem.id)}
-                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Remove
+              <button className="bg-red-500 hover:bg-red-700 text-white text-lg font-bold flex items-center align-middle justify-center rounded-full w-[25px] h-[25px]"
+                onClick={() => clearSite(site)}>
+                <span className="mb-[2px]">&times;</span>
               </button>
             </div>
-          </>
-
+            {isOpen[site] && Object.values(elems).map((elem) => (
+              <div key={elem.id} className="flex items-center p-1 hover:bg-slate-700 bg-slate-800 rounded-md" id={`elem-${elem.id}`} 
+              onMouseOver={() => highlightElem(elem.querySelector)}
+              onMouseLeave={() => unhighlightElem(elem.querySelector)}>
+                <div
+                  className="w-6 h-6 mr-2  cursor-pointer rounded-full"
+                  style={{ border: elem.colorToggle ? '4px solid #3b82f6' : '2px solid transparent', backgroundColor: elem.color }}
+                  id={`color-elem-${elem.id}`}
+                  onClick={() => handleColorToggle(elem.id)}
+                >
+                </div>
+                <div
+                  className="w-6 h-6 mr-2  cursor-pointer rounded-full"
+                  style={{ border: elem.textColorToggle ? '4px solid #3b82f6' : '2px solid transparent', backgroundColor: elem.textColor }}
+                  id={`text-elem-${elem.id}`}
+                  onClick={() => handleTextColorToggle(elem.id)}
+                >
+                </div>
+                <p className="flex-1 truncate ps-2 pe-3" id={`selector-${elem.id}`}>{elem.querySelector}</p>
+                {/* <Tooltip anchorSelect={`#selector-${elem.id}`} clickable className="z-50">
+                  <p>{elem.querySelector}</p>
+                </Tooltip> */}
+                <Tooltip anchorSelect={`#color-elem-${elem.id}`} clickable className="z-50">
+                  <ChromePicker color={elem.color} onChangeComplete={(color) => handleColorChangeComplete(color, elem.id)} />
+                </Tooltip>
+                <Tooltip anchorSelect={`#text-elem-${elem.id}`} clickable className="z-50">
+                  <ChromePicker color={elem.textColor} onChangeComplete={(color) => handleTextColorChangeComplete(color, elem.id)} />
+                </Tooltip>
+                <button className=" hover:bg-slate-500 text-white text-lg font-bold flex items-center align-middle justify-center rounded-full w-[25px] h-[25px]"
+                  onClick={() => handleRemoveElem(elem.id)}>
+                  <span className="mb-[2px]">&times;</span>
+                </button>
+              </div>
+            ))}
+          </div>
         ))}
+
+
+
       </div>
     </div>
   );
