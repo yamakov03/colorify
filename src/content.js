@@ -2,6 +2,8 @@ let selectedElem = null;
 let isSelecting = false;
 let idCounter = 0;
 let elements = {};
+let initialBgColor = '#000000';
+let initialTextColor = '#fff';
 
 function getQuerySelector(elem) {
   if (elem.id) {
@@ -58,16 +60,16 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       id,
       originalColor: elem.style.backgroundColor,
       originalTextColor: elem.style.color,
-      color: '#000000',
-      textColor: '#fff',
+      color: initialBgColor,
+      textColor: initialTextColor,
       querySelector: request.querySelector,
       colorToggle: true,
       textColorToggle: true,
       site: window.location.href
     };
     chrome.storage.sync.set({ elements });
-    elem.style.background = '#000000';
-    elem.style.color = '#fff';
+    elem.style.background = initialBgColor;
+    elem.style.color = initialTextColor;
     elem.parentNode.style.overflow = 'hidden';
 
   } else if (request.command === 'changeColor') {
@@ -113,7 +115,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     chrome.storage.sync.clear();
     alert('Cleared all elems');
     //refresh page
-    window.location.reload();
+    if (window.location.href === request.site) {
+      window.location.reload();
+    } 
   } 
   else if (request.command === 'clearFromSite') {
     for (const id in elements) {
@@ -126,7 +130,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     //refresh page
     if (window.location.href === request.site) {
       window.location.reload();
-    }    
+    }
+  } else if (request.command === 'setInitBgColor'){
+    initialBgColor = request.color;
+    chrome.storage.sync.set({ initialBgColor });
+  } else if (request.command === 'setInitTextColor'){
+    initialTextColor = request.textColor;
+    chrome.storage.sync.set({ initialTextColor });
   }
 });
 
@@ -139,16 +149,28 @@ chrome.storage.sync.get('elements', function (data) {
       for (const id in elements) {
         const querySelector = elements[id].querySelector;
         const elem = document.querySelector(querySelector);
-        if (elements[id].colorToggle) {
+        if (elements[id].colorToggle && elements[id].site === window.location.href) {
           elem.style.background = elements[id].color;
           elem.parentNode.style.overflow = 'hidden';
         }
-        if (elements[id].textColorToggle) {
+        if (elements[id].textColorToggle && elements[id].site === window.location.href) {
           changeTextColor(elem, elements[id].textColor);
         }
       }
     }, 2000);
 
+  }
+});
+
+chrome.storage.sync.get('initialBgColor', function (data) {
+  if (data.initialBgColor) {
+    initialBgColor = data.initialBgColor;
+  }
+});
+
+chrome.storage.sync.get('initialTextColor', function (data) {
+  if (data.initialTextColor) {
+    initialTextColor = data.initialTextColor;
   }
 });
 
@@ -175,16 +197,16 @@ document.addEventListener('click', function (e) {
       id,
       originalColor: selectedElem.style.backgroundColor,
       originalTextColor: selectedElem.style.color,
-      color: '#000000',
-      textColor: '#fff',
+      color: initialBgColor,
+      textColor: initialTextColor,
       querySelector: query,
       colorToggle: true,
       textColorToggle: true,
       site: window.location.href
     };
     chrome.storage.sync.set({ elements });
-    selectedElem.style.background = '#000000';
-    selectedElem.style.color = '#fff';
+    selectedElem.style.background = initialBgColor;
+    selectedElem.style.color = initialTextColor;
     selectedElem.parentNode.style.overflow = 'hidden';
     isSelecting = false;
   }
@@ -195,11 +217,11 @@ const observer = new MutationObserver((mutationsList, observer) => {
     const querySelector = elements[id].querySelector;
     const elem = document.querySelector(querySelector);
     if (elem) { // Check if the element exists
-      if (elements[id].colorToggle) {
+      if (elements[id].colorToggle && elements[id].site === window.location.href) {
         elem.style.background = elements[id].color;
         elem.parentNode.style.overflow = 'hidden';
       }
-      if (elements[id].textColorToggle) {
+      if (elements[id].textColorToggle && elements[id].site === window.location.href) {
         changeTextColor(elem, elements[id].textColor);
       }
     }
