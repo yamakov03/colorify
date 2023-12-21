@@ -1,14 +1,10 @@
 //// @ts-nocheck
 
 import { useEffect, useState } from "react"
-import ChromePicker from 'react-color';
-import Switch from "react-switch";
 import "~style.css"
 import { Tooltip } from 'react-tooltip'
 import Modal from 'react-modal';
 import Select from 'react-select';
-import ColorPicker from 'react-best-gradient-color-picker'
-import SettingsModal from './components/settingsModal';
 import ColorPickerTool from "~components/colorPickerTool";
 import icon from "data-base64:~assets/icon.png";
 
@@ -233,7 +229,7 @@ function IndexPopup() {
                     zIndex: 1000,
                   },
                 }}
-                className="bg-slate-900 text-white m-3 p-4 rounded-md mt-[60px]"
+                className="bg-slate-900 text-white m-3 p-4 rounded-md mt-[55px]"
                 contentLabel="settings modal"
               >
                 <div className="flex flex-row mb-2">
@@ -247,7 +243,7 @@ function IndexPopup() {
                 <div className="flex flex-row items-center justify-between mb-2">
                   <p className="text-lg">Initial background color</p>
                   <div className="flex align-middle">
-                    {initialBgColor !== '#000' && ( 
+                    {initialBgColor !== '#000' && (
                       <button className="hover:bg-slate-500 mr-2 text-white text-lg flex items-center align-middle justify-center rounded-full w-[25px] h-[25px] transition-all"
                         onClick={() => handleInitColorChange('#000')}>
                         <span className="mb-[0px]">⏎</span>
@@ -267,7 +263,7 @@ function IndexPopup() {
                 <div className="flex flex-row items-center justify-between mb-3">
                   <p className="text-lg">Initial text color</p>
                   <div className="flex align-middle">
-                    {initialTextColor !== '#fff' && ( 
+                    {initialTextColor !== '#fff' && (
                       <button className="hover:bg-slate-500 mr-2 text-white text-lg flex items-center align-middle justify-center rounded-full w-[25px] h-[25px] transition-all"
                         onClick={() => handleInitTextColorChange('#fff')}>
                         <span className="mb-[0px]">⏎</span>
@@ -462,18 +458,18 @@ function IndexPopup() {
         <div className="absolute bottom-0 p-2 w-full z-10 bg-slate-900 ">
           <div className="flex flex-row items-center justify-center bg-slate-900 ">
             <a href="https://www.buymeacoffee.com/yamakov" target="_blank" rel="noreferrer" className="me-2 hover:opacity-100 opacity-90 transition-all">
-              <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" className="w-[150px] h-[40px]" />
+              <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" className="w-[110px] h-[30px]" />
             </a>
-            <a href="https://www.producthunt.com/posts/colorify?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-colorify" target="_blank" rel="noreferrer" className="flex flex-row gap-2 items-center hover:opacity-100 opacity-90 transition-all">
-              <img src={icon} alt="Colorify - A chrome extension to color webpage elements" className="w-[40px]" />
-              <p className="text-xs">Colorify on<br></br>ProductHunt</p>
+            <a href="https://www.producthunt.com/posts/colorify-2" target="_blank" rel="noreferrer" className="flex flex-row gap-2 items-center hover:opacity-100 opacity-90 transition-all ">
+              <img src={icon} alt="Colorify - A chrome extension to color webpage elements" className="w-[30px]" />
+              <p className="text-xs ">Colorify on<br></br>ProductHunt</p>
             </a>
           </div>
           <div className="flex flex-row gap-2 justify-center align-middle w-full mt-2">
-            <a href="google.com" target="_blank" rel="noreferrer" className="text-gray-500 hover:underline">Privacy</a>
-            <a href="google.com" target="_blank" rel="noreferrer" className="text-gray-500 hover:underline">GitHub</a>
-            <a href="google.com" target="_blank" rel="noreferrer" className="text-gray-500 hover:underline">Made by Daniel</a>
-            <a href="google.com" target="_blank" rel="noreferrer" className="text-gray-500 hover:underline">Help</a>
+            <a href="https://github.com/yamakov03/colorify/blob/master/SECURITY.md" target="_blank" rel="noreferrer" className="text-gray-500 hover:underline">Privacy</a>
+            <a href="https://github.com/yamakov03/colorify" target="_blank" rel="noreferrer" className="text-gray-500 hover:underline">GitHub</a>
+            <a href="https://yamakov.tech/" target="_blank" rel="noreferrer" className="text-gray-500 hover:underline">Made by Daniel</a>
+            <a href="https://github.com/yamakov03/colorify/issues/new" target="_blank" rel="noreferrer" className="text-gray-500 hover:underline">Help</a>
           </div>
         </div>
       </div>

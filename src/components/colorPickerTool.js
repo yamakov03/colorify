@@ -2,7 +2,7 @@ import { Tooltip } from 'react-tooltip'
 import { useState } from "react";
 import ColorPicker from 'react-best-gradient-color-picker'
 
-function ColorPickerTool({ anchor, initColor, onChange, hideColorTypeBtns : hideColorTypeBtns = false}) {
+function ColorPickerTool({ anchor, initColor, onChange, hideColorTypeBtns: hideColorTypeBtns = false }) {
     const [color, setColor] = useState(initColor);
     return (
         <Tooltip

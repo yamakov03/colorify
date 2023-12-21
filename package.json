@@ -1,7 +1,7 @@
 {
   "name": "colorify",
   "displayName": "Colorify",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "colorify extension",
   "author": "Daniel Yamakov",
   "scripts": {
@@ -32,15 +32,9 @@
     "typescript": "5.2.2"
   },
   "manifest": {
-    "host_permissions": [
-      "https://*/*"
-    ],
     "permissions": [
       "storage",
-      "declarativeContent",
-      "activeTab",
-      "scripting",
-      "tabs"
+      "activeTab"
     ],
     "content_scripts": [
       {

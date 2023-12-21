@@ -25,6 +25,7 @@ function getQuerySelector(elem) {
 
 function changeTextColor(elem, color) {
   elem.style.color = color;
+  
   for (let i = 0; i < elem.children.length; i++) {
     changeTextColor(elem.children[i], color);
   }
@@ -70,7 +71,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     chrome.storage.sync.set({ elements });
     elem.style.background = initialBgColor;
     elem.style.color = initialTextColor;
-    elem.parentNode.style.overflow = 'hidden';
 
   } else if (request.command === 'changeColor') {
     elements[request.id].color = request.color;
@@ -78,7 +78,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     const elem = document.querySelector(elements[request.id].querySelector)
     if (elements[request.id].colorToggle) {
       elem.style.background = elements[request.id].color;
-      elem.parentNode.style.overflow = 'hidden';
     }
 
   } else if (request.command === 'changeTextColor') {
@@ -94,7 +93,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     const elem = document.querySelector(elements[request.id].querySelector);
     if (elements[request.id].colorToggle) {
       elem.style.background = elements[request.id].color;
-      elem.parentNode.style.overflow = 'hidden';
     } else {
       elem.style.background = elements[request.id].originalColor;
     }
@@ -112,13 +110,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
   } else if (request.command === 'clear') {
     elements = {};
-    chrome.storage.sync.clear();
+    chrome.storage.sync.set({ elements });
     alert('Cleared all elems');
     //refresh page
-    if (window.location.href === request.site) {
-      window.location.reload();
-    } 
-  } 
+    window.location.reload();
+  }
   else if (request.command === 'clearFromSite') {
     for (const id in elements) {
       if (elements[id].site === request.site) {
@@ -131,10 +127,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (window.location.href === request.site) {
       window.location.reload();
     }
-  } else if (request.command === 'setInitBgColor'){
+  } else if (request.command === 'setInitBgColor') {
     initialBgColor = request.color;
     chrome.storage.sync.set({ initialBgColor });
-  } else if (request.command === 'setInitTextColor'){
+  } else if (request.command === 'setInitTextColor') {
     initialTextColor = request.textColor;
     chrome.storage.sync.set({ initialTextColor });
   }
@@ -151,7 +147,6 @@ chrome.storage.sync.get('elements', function (data) {
         const elem = document.querySelector(querySelector);
         if (elements[id].colorToggle && elements[id].site === window.location.href) {
           elem.style.background = elements[id].color;
-          elem.parentNode.style.overflow = 'hidden';
         }
         if (elements[id].textColorToggle && elements[id].site === window.location.href) {
           changeTextColor(elem, elements[id].textColor);
@@ -207,7 +202,6 @@ document.addEventListener('click', function (e) {
     chrome.storage.sync.set({ elements });
     selectedElem.style.background = initialBgColor;
     selectedElem.style.color = initialTextColor;
-    selectedElem.parentNode.style.overflow = 'hidden';
     isSelecting = false;
   }
 });
@@ -219,7 +213,6 @@ const observer = new MutationObserver((mutationsList, observer) => {
     if (elem) { // Check if the element exists
       if (elements[id].colorToggle && elements[id].site === window.location.href) {
         elem.style.background = elements[id].color;
-        elem.parentNode.style.overflow = 'hidden';
       }
       if (elements[id].textColorToggle && elements[id].site === window.location.href) {
         changeTextColor(elem, elements[id].textColor);
